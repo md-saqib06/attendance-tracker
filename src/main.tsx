@@ -5,7 +5,7 @@ import App from './App.tsx'
 import AttendanceDashboard from './pages/AttendanceDashboard'
 import { dark } from "@clerk/themes";
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { ClerkProvider, useUser } from '@clerk/react-router'
+import { ClerkProvider } from '@clerk/react-router'
 
 // const { isSignedIn } = useUser();
 // console.log(isSignedIn)
