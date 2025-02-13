@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, Calendar, BookOpen, Users, BarChart2, Moon, Sun } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useNavigate } from 'react-router-dom';
-
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/clerk-react'
 
 const LandingPage = () => {
-    const [isLoginOpen, setLoginOpen] = useState(false);
-    const [isSignupOpen, setSignupOpen] = useState(false);
     const [visible, setVisible] = useState<{ [key: string]: boolean }>({});
     const [theme, setTheme] = useState('dark');
 
@@ -45,22 +40,6 @@ const LandingPage = () => {
         localStorage.setItem('theme', newTheme);
     };
 
-    const AuthForm = ({ isLogin }: any) => (
-        <div className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="your@email.com" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" />
-            </div>
-            <Button className="w-full">
-                {isLogin ? 'Login' : 'Create Account'}
-            </Button>
-        </div>
-    );
-
     return (
         <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
             <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
@@ -86,29 +65,21 @@ const LandingPage = () => {
                                     )}
                                 </Button>
 
-                                <Dialog open={isLoginOpen} onOpenChange={setLoginOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline">Login</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Welcome Back</DialogTitle>
-                                        </DialogHeader>
-                                        <AuthForm isLogin={true} />
-                                    </DialogContent>
-                                </Dialog>
+                                {/* SignIn / SignOut Buttons */}
+                                <SignedOut>
+                                    <Button variant="outline">
+                                        <SignInButton />
+                                    </Button>
+                                    <Button>
+                                        <SignUpButton />
+                                    </Button>
+                                </SignedOut>
 
-                                <Dialog open={isSignupOpen} onOpenChange={setSignupOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button>Sign Up</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Create Account</DialogTitle>
-                                        </DialogHeader>
-                                        <AuthForm isLogin={false} />
-                                    </DialogContent>
-                                </Dialog>
+                                {/* UserProfile Button */}
+                                <SignedIn>
+                                    <UserButton />
+                                </SignedIn>
+
                             </div>
                         </div>
                     </div>
@@ -125,12 +96,20 @@ const LandingPage = () => {
                                 Track, analyze, and optimize attendance with our intuitive dashboard. Perfect for educators and institutions.
                             </p>
                             <div className="flex justify-center space-x-4 animate-on-scroll" id="hero-cta">
-                                <Button onClick={() => { navigate("/dashboard") }} size="lg">
-                                    Get Started Free
-                                </Button>
-                                <Button variant="outline" size="lg">
-                                    View Demo
-                                </Button>
+                                <SignedOut>
+                                    <Button onClick={() => { navigate("/dashboard") }} size="lg">
+                                        <SignInButton>
+                                            Get Started Free
+                                        </SignInButton>
+                                    </Button>
+                                </SignedOut>
+                                <SignedIn>
+                                    <Button onClick={() => { navigate("/dashboard") }} size="lg">
+                                        <SignInButton>
+                                            Go To Dashboard
+                                        </SignInButton>
+                                    </Button>
+                                </SignedIn>
                             </div>
                         </div>
                     </div>
