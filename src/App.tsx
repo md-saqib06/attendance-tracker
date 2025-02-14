@@ -1,8 +1,6 @@
-// import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom"
 import LandingPage from './pages/LandingPage'
 import { useUser } from "@clerk/clerk-react";
-import './App.css'
 import AttendanceDashboard from "./pages/AttendanceDashboard";
 
 function App() {

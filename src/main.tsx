@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-// import AttendanceDashboard from './pages/AttendanceDashboard'
 import { dark } from "@clerk/themes";
 import { BrowserRouter } from "react-router-dom"
 import { ClerkProvider } from '@clerk/react-router'
