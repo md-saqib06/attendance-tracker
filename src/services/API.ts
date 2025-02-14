@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export const addRecord = async (emailAddress: any, date: Date, classes: Array<String>) => {
     await fetch(`${API_BASE_URL}`, {
@@ -16,6 +16,8 @@ export const addRecord = async (emailAddress: any, date: Date, classes: Array<St
 }
 
 export const getAllRecord = async (emailAddresses: any) => {
+    const url = `${API_BASE_URL}/${emailAddresses}`
+    console.log(url)
     const res = await fetch(`${API_BASE_URL}/${emailAddresses}`, {
         method: 'GET',
     })
