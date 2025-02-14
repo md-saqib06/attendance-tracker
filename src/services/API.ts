@@ -1,5 +1,7 @@
+const API_BASE_URL = import.meta.env.API_BASE_URL
+
 export const addRecord = async (emailAddress: any, date: Date, classes: Array<String>) => {
-    await fetch('http://localhost:3000/api/attendance', {
+    await fetch(`${API_BASE_URL}`, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -14,21 +16,21 @@ export const addRecord = async (emailAddress: any, date: Date, classes: Array<St
 }
 
 export const getAllRecord = async (emailAddresses: any) => {
-    const res = await fetch(`http://localhost:3000/api/attendance/${emailAddresses}`, {
+    const res = await fetch(`${API_BASE_URL}/${emailAddresses}`, {
         method: 'GET',
     })
     return res
 }
 
 export const getMonthlyStats = async (emailAddresses: any) => {
-    const res = await fetch(`http://localhost:3000/api/attendance/stats/monthly/${emailAddresses}`, {
+    const res = await fetch(`${API_BASE_URL}/stats/monthly/${emailAddresses}`, {
         method: 'GET',
     })
     return res
 }
 
 export const updateRecord = async (id: String, classes: Array<String>) => {
-    await fetch(`http://localhost:3000/api/attendance/${id}`, {
+    await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: {
             'Accept': 'application/json',
@@ -41,7 +43,7 @@ export const updateRecord = async (id: String, classes: Array<String>) => {
 }
 
 export const deleteRecord = async (id: string) => {
-    await fetch(`http://localhost:3000/api/attendance/${id}`, {
+    await fetch(`${API_BASE_URL}/${id}`, {
         method: 'DELETE',
     })
 }
