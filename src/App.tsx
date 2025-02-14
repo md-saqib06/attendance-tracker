@@ -1,21 +1,28 @@
-import { Routes, Route } from "react-router-dom"
-import LandingPage from './pages/LandingPage'
+import { Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { useUser } from "@clerk/clerk-react";
-import AttendanceDashboard from "./pages/AttendanceDashboard";
+
+// Lazy load the pages
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const AttendanceDashboard = lazy(() => import('./pages/AttendanceDashboard'));
+
+// Optional: Fallback component for when the page is loading
+const Loading = () => <div className="flex justify-center items-center h-screen w-screen text-white bg-[#0a0a0a]">Loading...</div>;
 
 function App() {
-
   const user = useUser();
 
   return (
     <>
-      <Routes>
-        <Route path='/' element={<LandingPage />} />
-        <Route path='/dashboard' element={user.isSignedIn ? <AttendanceDashboard /> : <LandingPage />} />
-        {/* <Route path="*" element={<NotFound />} /> */}
-      </Routes>
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path='/' element={<LandingPage />} />
+          <Route path='/dashboard' element={user.isSignedIn ? <AttendanceDashboard /> : <LandingPage />} />
+        </Routes>
+      </Suspense>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
+
