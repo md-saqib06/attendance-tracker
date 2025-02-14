@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, Sun, Moon } from 'lucide-react';
+import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, Sun, Moon, LogOut, Home } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { SignOutButton, UserButton, useUser } from "@clerk/clerk-react";
 import { addRecord, getAllRecord, getMonthlyStats, updateRecord, deleteRecord } from '@/services/API';
+import { useNavigate } from 'react-router-dom';
 
 const AttendanceDashboard = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -26,6 +27,8 @@ const AttendanceDashboard = () => {
     const [monthlyStats, setMonthlyStats] = useState([]);
     const [theme, setTheme] = useState('dark');
 
+    const user = useUser().user;
+    const navigate = useNavigate();
 
     // Theme initialization and management
     useEffect(() => {
@@ -54,16 +57,15 @@ const AttendanceDashboard = () => {
 
     // Fetch attendance records and monthly stats on component mount
     useEffect(() => {
-        fetchAttendanceRecords();
-        fetchMonthlyStats();
+        fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress);
+        fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress);
     }, []);
 
-    const fetchAttendanceRecords = async () => {
+    const fetchAttendanceRecords = async (userEmail: any) => {
         try {
-            const response = await getAllRecord();
+            const response = await getAllRecord(userEmail);
             if (response.ok) {
                 const data = await response.json();
-                console.log(data)
                 setAttendanceRecords(data);
             }
         } catch (error) {
@@ -71,9 +73,9 @@ const AttendanceDashboard = () => {
         }
     };
 
-    const fetchMonthlyStats = async () => {
+    const fetchMonthlyStats = async (userEmail: any) => {
         try {
-            const response = await getMonthlyStats();
+            const response = await getMonthlyStats(userEmail);
             if (response.ok) {
                 const data = await response.json();
                 setMonthlyStats(data);
@@ -88,15 +90,6 @@ const AttendanceDashboard = () => {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         return days[date.getDay()];
     };
-
-    // Helper function to format date
-    // const formatDate = (date: Date) => {
-    //     return date.toLocaleDateString('en-US', {
-    //         year: 'numeric',
-    //         month: '2-digit',
-    //         day: '2-digit'
-    //     });
-    // };
 
     const getClassesForDate = (date: Date) => {
         const dayName = getDayName(date) as keyof typeof subjectSchedule;
@@ -136,10 +129,9 @@ const AttendanceDashboard = () => {
     const handleConfirmDelete = async () => {
         if (currentDeleteRecord) {
             try {
-                console.log(currentDeleteRecord)
                 await deleteRecord(currentDeleteRecord);
-                fetchAttendanceRecords(); // Refresh the records
-                fetchMonthlyStats(); // Refresh the stats
+                fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
+                fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
                 setDeleteModalOpen(false)
                 setCurrentDeleteRecord(null);
             } catch (error) {
@@ -157,9 +149,9 @@ const AttendanceDashboard = () => {
     const handleSaveEdit = async () => {
         if (currentEditRecord) {
             try {
-                await updateRecord(currentEditRecord._id);
-                fetchAttendanceRecords(); // Refresh the records
-                fetchMonthlyStats(); // Refresh the stats
+                await updateRecord(currentEditRecord._id, selectedClasses);
+                fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
+                fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
                 setEditModalOpen(false);
                 setCurrentEditRecord(null);
                 setSelectedClasses([]);
@@ -171,9 +163,9 @@ const AttendanceDashboard = () => {
 
     const handleSaveAttendance = async () => {
         try {
-            await addRecord(selectedDate, selectedClasses);
-            fetchAttendanceRecords(); // Refresh the records
-            fetchMonthlyStats(); // Refresh the stats
+            await addRecord(user?.primaryEmailAddress?.emailAddress, selectedDate, selectedClasses);
+            fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
+            fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
             setModalOpen(false);
             setSelectedDate(new Date());
             setSelectedClasses([]);
@@ -248,38 +240,70 @@ const AttendanceDashboard = () => {
     return (
         <div className={`flex h-screen`}>
             {/* Sidebar */}
-            <div className={`${theme === 'dark' ? 'bg-black text-gray-200' : 'bg-white'} shadow-lg ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out`}>
-                <div className="p-4 flex justify-between items-center">
+            <div className={`${theme === 'dark' ? 'bg-black text-gray-200' : 'bg-white'} shadow-lg ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out h-full flex flex-col`}>
+                <div className={`p-4 flex justify-between items-center ${!isSidebarOpen && 'justify-center ml-1'}`}>
                     <h2 className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}>Attendance</h2>
                     <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!isSidebarOpen)}>
                         <Menu className="h-6 w-6 " />
                     </Button>
                 </div>
+                <hr className=' mx-4' />
 
-                <nav className="mt-8 px-4 space-y-2">
-                    <button
-                        onClick={() => setActiveView('dashboard')}
-                        className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
+                <nav className="flex-1 flex flex-col justify-between">
+                    <div className='mt-8 px-4 space-y-2'>
+
+                        <button
+                            onClick={() => setActiveView('dashboard')}
+                            className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
                             ${activeView === 'dashboard'
-                                ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
-                                : ''} 
+                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
+                                    : ''} 
                             ${theme === 'dark' ? 'hover:bg-[#1A1A1A]' : 'hover:bg-gray-100'}`}
-                    >
-                        <LayoutDashboard className="h-5 w-5" />
-                        {isSidebarOpen && <span>Dashboard</span>}
-                    </button>
+                        >
+                            <LayoutDashboard className="h-5 w-5" />
+                            {isSidebarOpen && <span>Dashboard</span>}
+                        </button>
 
-                    <button
-                        onClick={() => setActiveView('details')}
-                        className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
+                        <button
+                            onClick={() => setActiveView('details')}
+                            className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
                             ${activeView === 'details'
-                                ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
-                                : ''} 
+                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
+                                    : ''} 
                             ${theme === 'dark' ? 'hover:bg-[#1A1A1A]' : 'hover:bg-gray-100'}`}
-                    >
-                        <List className="h-5 w-5" />
-                        {isSidebarOpen && <span>Detail View</span>}
-                    </button>
+                        >
+                            <List className="h-5 w-5" />
+                            {isSidebarOpen && <span>Detail View</span>}
+                        </button>
+                    </div>
+                    <div className='m-4 p-2 bg-[#1A1A1A] rounded-lg'>
+                        <div className='flex items-center pb-2'>
+                            <div className=''>
+                                <UserButton />
+                            </div>
+                            <div className='px-4'>
+                                <div>
+                                    {isSidebarOpen && user?.fullName}
+                                </div>
+                                <div className='text-gray-500 text-sm'>
+                                    {isSidebarOpen && user?.primaryEmailAddress?.emailAddress}
+                                </div>
+
+                            </div>
+                        </div>
+                        <div className='flex justify-between items-center'>
+                            <Button className={`${!isSidebarOpen && 'p-2'}`} variant={'outline'} onClick={() => { navigate("/") }}>
+                                <Home />
+                                {isSidebarOpen && <span>Home</span>}
+                            </Button>
+                            {isSidebarOpen &&
+                                <Button variant={'outline'}>
+                                    <LogOut />
+                                    <SignOutButton />
+                                </Button>
+                            }
+                        </div>
+                    </div>
                 </nav>
             </div>
 

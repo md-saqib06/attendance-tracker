@@ -1,4 +1,4 @@
-export const addRecord = async (date: Date, classes: Array<String>) => {
+export const addRecord = async (emailAddress: any, date: Date, classes: Array<String>) => {
     await fetch('http://localhost:3000/api/attendance', {
         method: 'POST',
         headers: {
@@ -6,38 +6,42 @@ export const addRecord = async (date: Date, classes: Array<String>) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+            "emailAddress": emailAddress,
             "date": date,
             "classes": classes
         })
     })
 }
 
-export const getAllRecord = async () => {
-    const res = await fetch('http://localhost:3000/api/attendance', {
+export const getAllRecord = async (emailAddresses: any) => {
+    const res = await fetch(`http://localhost:3000/api/attendance/${emailAddresses}`, {
         method: 'GET',
     })
-    // console.log("getAllRecord():\n", res)
     return res
 }
 
-export const getMonthlyStats = async () => {
-    const res = await fetch('http://localhost:3000/api/attendance/stats/monthly', {
+export const getMonthlyStats = async (emailAddresses: any) => {
+    const res = await fetch(`http://localhost:3000/api/attendance/stats/monthly/${emailAddresses}`, {
         method: 'GET',
     })
-    // console.log("getMonthlyStats():\n", res)
     return res
 }
 
-export const updateRecord = async (id: string) => {
-    const res = await fetch(`http://localhost:3000/api/attendance/stats/monthly/${id}`, {
+export const updateRecord = async (id: String, classes: Array<String>) => {
+    await fetch(`http://localhost:3000/api/attendance/${id}`, {
         method: 'PUT',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            "classes": classes
+        })
     })
-    console.log("Monthly: \n", res)
 }
 
 export const deleteRecord = async (id: string) => {
-    const res = await fetch(`http://localhost:3000/api/attendance/${id}`, {
+    await fetch(`http://localhost:3000/api/attendance/${id}`, {
         method: 'DELETE',
     })
-    console.log(res)
 }
