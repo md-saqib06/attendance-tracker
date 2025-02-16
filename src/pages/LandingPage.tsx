@@ -58,10 +58,10 @@ const LandingPage = () => {
                 <header className="fixed top-0 w-full bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-50 border-b border-gray-200 dark:border-gray-800">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center h-16">
-                            <div className="flex items-center space-x-2">
+                            <button className="flex items-center space-x-2" onClick={() => { navigate('/') }}>
                                 <LayoutDashboard className="h-8 w-8 text-black dark:text-gray-50" />
                                 <span className="text-xl font-bold dark:text-white">AttendanceHub</span>
-                            </div>
+                            </button>
                             <div className="flex items-center space-x-4">
                                 <Button
                                     variant="ghost"
@@ -193,8 +193,8 @@ const LandingPage = () => {
                             <div>
                                 <h4 className="font-semibold mb-4 dark:text-white">Contact</h4>
                                 <ul className="space-y-2 text-gray-600 dark:text-gray-300">
-                                    <li>support@attendancehub.com</li>
-                                    <li>+1 (555) 123-4567</li>
+                                    <li>support@pegioncloud.com                                    </li>
+                                    <li>+91 (555) 123-4567</li>
                                 </ul>
                             </div>
                         </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { format as formatDate } from 'date-fns'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,8 +8,10 @@ import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, S
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SignOutButton, UserButton, useUser } from "@clerk/clerk-react";
-import { addRecord, getAllRecord, getMonthlyStats, updateRecord, deleteRecord } from '@/services/API';
+import { addRecord, getAllRecord, updateRecord, deleteRecord } from '@/services/API';
 import { useNavigate } from 'react-router-dom';
+import MonthlyStatsChart from '@/components/dashboard/charts/MonthlyStatsChart';
+import CurrentMonthStats from '@/components/dashboard/charts/CurrentMonthStats';
 
 const AttendanceDashboard = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -24,7 +25,6 @@ const AttendanceDashboard = () => {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [attendanceRecords, setAttendanceRecords] = useState([]);
-    const [monthlyStats, setMonthlyStats] = useState([]);
     const [theme, setTheme] = useState('dark');
 
     const user = useUser().user;
@@ -55,10 +55,9 @@ const AttendanceDashboard = () => {
         Sunday: []
     };
 
-    // Fetch attendance records and monthly stats on component mount
+    // Fetch attendance records on component mount
     useEffect(() => {
         fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress);
-        fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress);
     }, []);
 
     const fetchAttendanceRecords = async (userEmail: any) => {
@@ -70,18 +69,6 @@ const AttendanceDashboard = () => {
             }
         } catch (error) {
             console.error('Error fetching attendance records:', error);
-        }
-    };
-
-    const fetchMonthlyStats = async (userEmail: any) => {
-        try {
-            const response = await getMonthlyStats(userEmail);
-            if (response.ok) {
-                const data = await response.json();
-                setMonthlyStats(data);
-            }
-        } catch (error) {
-            console.error('Error fetching monthly stats:', error);
         }
     };
 
@@ -131,7 +118,6 @@ const AttendanceDashboard = () => {
             try {
                 await deleteRecord(currentDeleteRecord);
                 fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
-                fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
                 setDeleteModalOpen(false)
                 setCurrentDeleteRecord(null);
             } catch (error) {
@@ -143,15 +129,15 @@ const AttendanceDashboard = () => {
     const handleEdit = (record: any) => {
         setCurrentEditRecord(record);
         setSelectedClasses(record.classes);
+        setSelectedDate(new Date(record.date));
         setEditModalOpen(true);
     };
 
     const handleSaveEdit = async () => {
         if (currentEditRecord) {
             try {
-                await updateRecord(currentEditRecord._id, selectedClasses);
+                await updateRecord(currentEditRecord._id, selectedClasses, getClassesForDate(selectedDate).length);
                 fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
-                fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
                 setEditModalOpen(false);
                 setCurrentEditRecord(null);
                 setSelectedClasses([]);
@@ -163,9 +149,8 @@ const AttendanceDashboard = () => {
 
     const handleSaveAttendance = async () => {
         try {
-            await addRecord(user?.primaryEmailAddress?.emailAddress, selectedDate, selectedClasses);
+            await addRecord(user?.primaryEmailAddress?.emailAddress, selectedDate, selectedClasses, getClassesForDate(selectedDate).length);
             fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
-            fetchMonthlyStats(user?.primaryEmailAddress?.emailAddress); // Refresh the stats
             setModalOpen(false);
             setSelectedDate(new Date());
             setSelectedClasses([]);
@@ -198,11 +183,11 @@ const AttendanceDashboard = () => {
                             />
                         </PopoverContent>
                     </Popover>
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        {getDayName(selectedDate)}'s Classes
-                    </p>
                 </div>
             )}
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {getDayName(selectedDate)}'s Classes
+            </p>
 
             <div className="flex space-x-4 mb-4">
                 <Button
@@ -242,7 +227,12 @@ const AttendanceDashboard = () => {
             {/* Sidebar */}
             <div className={`${theme === 'dark' ? 'bg-black text-gray-200' : 'bg-white'} shadow-lg ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out h-full flex flex-col`}>
                 <div className={`p-4 flex justify-between items-center ${!isSidebarOpen && 'justify-center ml-1'}`}>
-                    <h2 className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}>Attendance</h2>
+                    <button
+                        className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}
+                        onClick={() => {
+                            navigate('/')
+                        }}
+                    >Attendance</button>
                     <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!isSidebarOpen)}>
                         <Menu className="h-6 w-6 " />
                     </Button>
@@ -256,7 +246,7 @@ const AttendanceDashboard = () => {
                             onClick={() => setActiveView('dashboard')}
                             className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
                             ${activeView === 'dashboard'
-                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
+                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-200')
                                     : ''} 
                             ${theme === 'dark' ? 'hover:bg-[#1A1A1A]' : 'hover:bg-gray-100'}`}
                         >
@@ -268,7 +258,7 @@ const AttendanceDashboard = () => {
                             onClick={() => setActiveView('details')}
                             className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
                             ${activeView === 'details'
-                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-100')
+                                    ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-200')
                                     : ''} 
                             ${theme === 'dark' ? 'hover:bg-[#1A1A1A]' : 'hover:bg-gray-100'}`}
                         >
@@ -276,9 +266,10 @@ const AttendanceDashboard = () => {
                             {isSidebarOpen && <span>Detail View</span>}
                         </button>
                     </div>
-                    <div className='m-4 p-2 bg-[#1A1A1A] rounded-lg'>
-                        <div className='flex items-center pb-2'>
-                            <div className=''>
+                    <div className='p-2 shadow-t-md dark:shadow-[#222222] dark:bg-black rounded-t-2xl'>
+                        {/* <hr className='mb-4' /> */}
+                        <div className='flex items-center mt-4 pb-2'>
+                            <div className='w-full items-center'>
                                 <UserButton />
                             </div>
                             <div className='px-4'>
@@ -292,7 +283,7 @@ const AttendanceDashboard = () => {
                             </div>
                         </div>
                         <div className='flex justify-between items-center'>
-                            <Button className={`${!isSidebarOpen && 'p-2'}`} variant={'outline'} onClick={() => { navigate("/") }}>
+                            <Button className={`${!isSidebarOpen && 'p-2 w-full'}`} variant={'outline'} onClick={() => { navigate("/") }}>
                                 <Home />
                                 {isSidebarOpen && <span>Home</span>}
                             </Button>
@@ -345,59 +336,13 @@ const AttendanceDashboard = () => {
                     </div>
 
                     {activeView === 'dashboard' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <Card className="col-span-1 dark:bg-black">
-                                <CardHeader>
-                                    <CardTitle>Present Classes</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={200}>
-                                        <BarChart data={monthlyStats}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Bar dataKey="present" fill="#4CAF50" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="col-span-1 dark:bg-black">
-                                <CardHeader>
-                                    <CardTitle>Absent Classes</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={200}>
-                                        <BarChart data={monthlyStats}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Bar dataKey="absent" fill="#f44336" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="col-span-1 dark:bg-black">
-                                <CardHeader>
-                                    <CardTitle>Total Classes</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={200}>
-                                        <BarChart data={monthlyStats}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Bar dataKey="total" fill="#2196F3" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
+                        // Dashboard
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <MonthlyStatsChart />
+                            <CurrentMonthStats />
                         </div>
                     ) : (
+                        // Detail View
                         <Card className='dark:bg-black'>
                             <CardHeader>
                                 <CardTitle>Detailed Attendance Record</CardTitle>
@@ -415,7 +360,7 @@ const AttendanceDashboard = () => {
                                         </thead>
                                         <tbody>
                                             {attendanceRecords.map((record: any) => (
-                                                <tr key={record._id} className="border-b cursor-pointer hover:bg-[#1A1A1A] transition-colors duration-300">
+                                                <tr key={record._id} className="border-b hover:bg-gray-200 dark:hover:bg-[#1A1A1A] transition-colors duration-300">
                                                     <td className="p-4">{formatDate(new Date(record.date), 'PPP')}</td>
                                                     <td className="p-4">
                                                         <span className={`px-2 py-1 rounded-full text-sm ${record.classes.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
