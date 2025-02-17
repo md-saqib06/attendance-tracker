@@ -2,19 +2,9 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, Calendar, BookOpen, Users, BarChart2, Moon, Sun } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut, useUser } from '@clerk/clerk-react'
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/clerk-react'
 
 const LandingPage = () => {
-
-    const user = useUser();
-
-    useEffect(() => {
-        if (user.isSignedIn) {
-            localStorage.setItem("isLoggedIn", "true");
-        } else {
-            localStorage.setItem("isLoggedIn", "false");
-        }
-    }, [])
 
     const [visible, setVisible] = useState<{ [key: string]: boolean }>({});
     const [theme, setTheme] = useState('dark');

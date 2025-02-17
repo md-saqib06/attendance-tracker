@@ -26,7 +26,7 @@ const CurrentMonthStats = () => {
         if (userMail) {
             fetchAttendanceRecords(userMail);
         }
-    }, [userMail]);
+    }, []);
 
     const fetchAttendanceRecords = async (userEmail: string) => {
         try {

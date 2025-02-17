@@ -51,7 +51,7 @@ const AttendanceDashboard = () => {
         Wednesday: ['SE Lab 1', 'SE Lab 2', 'DS/AI Lab 1', 'DS/AI Lab 2', 'DM', 'DS/AI'],
         Thursday: ['Java Lab 1', 'Java Lab 2', 'SE', 'IMED', 'PDS'],
         Friday: ['SE', 'Java 1', 'Java 2', 'IMED', 'DM', 'DS/AI'],
-        Saturday: ['Java', 'Java', 'DM', 'DS/AI'],
+        Saturday: ['Java 1', 'Java 2', 'DM', 'DS/AI'],
         Sunday: []
     };
 
