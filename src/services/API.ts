@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-export const addRecord = async (emailAddress: any, date: Date, classes: Array<String>, totalClasses: Number) => {
+export const addRecord = async (emailAddress: any, date: Date, classes: Array<String>, totalClasses: Number, canceledClasses: Array<String>) => {
     await fetch(`${API_BASE_URL}`, {
         method: 'POST',
         headers: {
@@ -11,12 +11,13 @@ export const addRecord = async (emailAddress: any, date: Date, classes: Array<St
             "emailAddress": emailAddress,
             "date": date,
             "classes": classes,
-            "totalClasses": totalClasses
+            "totalClasses": totalClasses,
+            "canceledClasses": canceledClasses
         })
     })
 }
 
-export const updateRecord = async (id: String, classes: Array<String>, totalClasses: Number) => {
+export const updateRecord = async (id: String, classes: Array<String>, totalClasses: Number, canceledClasses: Array<String>) => {
     await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: {
@@ -25,7 +26,8 @@ export const updateRecord = async (id: String, classes: Array<String>, totalClas
         },
         body: JSON.stringify({
             "classes": classes,
-            "totalClasses": totalClasses
+            "totalClasses": totalClasses,
+            "canceledClasses": canceledClasses
         })
     })
 }

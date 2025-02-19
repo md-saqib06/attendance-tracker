@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, Sun, Moon, LogOut, Home } from 'lucide-react';
+import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, Sun, Moon, LogOut, Home, Ban } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Toggle } from "@/components/ui/toggle"
 import { SignOutButton, UserButton, useUser } from "@clerk/clerk-react";
 import { addRecord, getAllRecord, updateRecord, deleteRecord } from '@/services/API';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,7 @@ const AttendanceDashboard = () => {
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [theme, setTheme] = useState('dark');
+    const [canceledClasses, setCanceledClasses] = useState<string[]>([]);
 
     const user = useUser().user;
     const navigate = useNavigate();
@@ -101,12 +103,14 @@ const AttendanceDashboard = () => {
     };
 
     const handleClassToggle = (className: string) => {
-        setSelectedClasses(prev =>
+        if (canceledClasses.includes(className)) return; // Prevent selecting canceled classes
+        setSelectedClasses((prev) =>
             prev.includes(className)
-                ? prev.filter(c => c !== className)
+                ? prev.filter((c) => c !== className)
                 : [...prev, className]
         );
     };
+
 
     const handleDelete = async (id: string) => {
         setCurrentDeleteRecord(id);
@@ -129,6 +133,7 @@ const AttendanceDashboard = () => {
     const handleEdit = (record: any) => {
         setCurrentEditRecord(record);
         setSelectedClasses(record.classes);
+        setCanceledClasses(record.canceledClasses);
         setSelectedDate(new Date(record.date));
         setEditModalOpen(true);
     };
@@ -136,91 +141,111 @@ const AttendanceDashboard = () => {
     const handleSaveEdit = async () => {
         if (currentEditRecord) {
             try {
-                await updateRecord(currentEditRecord._id, selectedClasses, getClassesForDate(selectedDate).length);
-                fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
+                const totalClasses = getClassesForDate(selectedDate).length - canceledClasses.length; // Deduct canceled classes
+                await updateRecord(currentEditRecord._id, selectedClasses, totalClasses, canceledClasses);
+                fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh records
                 setEditModalOpen(false);
                 setCurrentEditRecord(null);
                 setSelectedClasses([]);
+                setCanceledClasses([]);
             } catch (error) {
-                console.error('Error updating record:', error);
+                console.error("Error updating record:", error);
             }
         }
     };
 
+
+
     const handleSaveAttendance = async () => {
         try {
-            await addRecord(user?.primaryEmailAddress?.emailAddress, selectedDate, selectedClasses, getClassesForDate(selectedDate).length);
-            fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh the records
+            const totalClasses = getClassesForDate(selectedDate).length - canceledClasses.length; // Deduct canceled classes
+            await addRecord(user?.primaryEmailAddress?.emailAddress, selectedDate, selectedClasses, totalClasses, canceledClasses);
+            fetchAttendanceRecords(user?.primaryEmailAddress?.emailAddress); // Refresh records
             setModalOpen(false);
             setSelectedDate(new Date());
             setSelectedClasses([]);
+            setCanceledClasses([]);
         } catch (error) {
-            console.error('Error adding record:', error);
+            console.error("Error adding record:", error);
         }
     };
 
-    const AttendanceForm = ({ isEdit = false }) => (
-        <div className="space-y-4">
-            {!isEdit && (
-                <div className="mb-6">
-                    <label className="block text-sm font-medium mb-2">Select Date</label>
-                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal"
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {formatDate(selectedDate, 'PPP')}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={handleDateSelect}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-            )}
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                {getDayName(selectedDate)}'s Classes
-            </p>
 
-            <div className="flex space-x-4 mb-4">
-                <Button
-                    variant="outline"
-                    onClick={() => handleMarkAll('present')}
-                    className="flex-1"
-                >
-                    Mark All Present
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={() => handleMarkAll('absent')}
-                    className="flex-1"
-                >
-                    Mark All Absent
-                </Button>
-            </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-                {getClassesForDate(selectedDate).map((cls) => (
-                    <div key={cls} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                        <Checkbox
-                            id={cls}
-                            checked={selectedClasses.includes(cls)}
-                            onCheckedChange={() => handleClassToggle(cls)}
-                            className="dark:border-gray-600"
-                        />
-                        <label htmlFor={cls} className="flex-1 dark:text-gray-200 cursor-pointer">{cls}</label>
+    const handleCancelToggle = (className: string) => {
+        setCanceledClasses((prev) => {
+            if (prev.includes(className)) {
+                return prev.filter((c) => c !== className);
+            } else {
+                setSelectedClasses((prevSelected) => prevSelected.filter((c) => c !== className)); // Remove from selection
+                return [...prev, className];
+            }
+        });
+    };
+
+
+    const AttendanceForm = ({ isEdit = false }) => {
+        return (
+            <div className="space-y-4">
+                {!isEdit && (
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium mb-2">Select Date</label>
+                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {formatDate(selectedDate, "PPP")}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar mode="single" selected={selectedDate} onSelect={handleDateSelect} initialFocus />
+                            </PopoverContent>
+                        </Popover>
                     </div>
-                ))}
+                )}
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{getDayName(selectedDate)}'s Classes</p>
+
+                <div className="flex space-x-4 mb-4">
+                    <Button variant="outline" onClick={() => handleMarkAll("present")} className="flex-1">
+                        Mark All Present
+                    </Button>
+                    <Button variant="outline" onClick={() => handleMarkAll("absent")} className="flex-1">
+                        Mark All Absent
+                    </Button>
+                </div>
+
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {getClassesForDate(selectedDate).map((cls) => (
+                        <div key={cls} className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                            {/* Attendance Checkbox */}
+                            <Checkbox
+                                id={cls}
+                                checked={selectedClasses.includes(cls)}
+                                onCheckedChange={() => handleClassToggle(cls)}
+                                className="dark:border-gray-600"
+                                disabled={canceledClasses.includes(cls)} // Disable if canceled
+                            />
+                            <label htmlFor={cls} className={`flex-1 dark:text-gray-200 cursor-pointer ${canceledClasses.includes(cls) ? "line-through text-gray-500" : ""}`}>
+                                {cls}
+                            </label>
+
+                            {/* Class Canceled Toggle */}
+                            <Toggle
+                                id={`cancel-${cls}`}
+                                variant="outline"
+                                defaultPressed={canceledClasses.includes(cls)}
+                                onPressedChange={() => handleCancelToggle(cls)}
+                                className="hover:bg-red-500 data-[state=on]:bg-red-500"
+                            >
+                                <Ban />
+                            </Toggle>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
+
 
     return (
         <div className={`flex h-screen`}>
@@ -266,33 +291,36 @@ const AttendanceDashboard = () => {
                             {isSidebarOpen && <span>Detail View</span>}
                         </button>
                     </div>
-                    <div className='p-2 shadow-t-md dark:shadow-[#222222] dark:bg-black rounded-t-2xl'>
-                        {/* <hr className='mb-4' /> */}
-                        <div className='flex items-center mt-4 pb-2'>
-                            <div className='w-full items-center'>
-                                <UserButton />
-                            </div>
-                            <div className='px-4'>
-                                <div>
-                                    {isSidebarOpen && user?.fullName}
-                                </div>
-                                <div className='text-gray-500 text-sm'>
-                                    {isSidebarOpen && user?.primaryEmailAddress?.emailAddress}
-                                </div>
 
+                    {/* User Details */}
+                    <div className='shadow-t-md dark:shadow-[#222222] dark:bg-black rounded-t-2xl'>
+                        <div className=' flex flex-col gap-2'>
+                            <div className='flex items-center justify-center gap-4 rounded-lg mx-2 mt-2 p-2 bg-gray-200 dark:bg-[#1a1a1a]'>
+                                <div>
+                                    <UserButton />
+                                </div>
+                                <div>
+                                    <div>
+                                        {isSidebarOpen && user?.fullName}
+                                    </div>
+                                    <div className='text-gray-500 text-sm'>
+                                        {isSidebarOpen && user?.primaryEmailAddress?.emailAddress}
+                                    </div>
+
+                                </div>
                             </div>
-                        </div>
-                        <div className='flex justify-between items-center'>
-                            <Button className={`${!isSidebarOpen && 'p-2 w-full'}`} variant={'outline'} onClick={() => { navigate("/") }}>
-                                <Home />
-                                {isSidebarOpen && <span>Home</span>}
-                            </Button>
-                            {isSidebarOpen &&
-                                <Button variant={'outline'}>
-                                    <LogOut />
-                                    <SignOutButton />
+                            <div className='grid grid-cols-2 gap-2 justify-between items-center mx-2 mb-4'>
+                                <Button className={`${!isSidebarOpen && 'p-2 w-full'}`} variant={'outline'} onClick={() => { navigate("/") }}>
+                                    <Home />
+                                    {isSidebarOpen && <span>Home</span>}
                                 </Button>
-                            }
+                                {isSidebarOpen &&
+                                    <Button variant={'outline'} className='w-full'>
+                                        <LogOut />
+                                        <SignOutButton />
+                                    </Button>
+                                }
+                            </div>
                         </div>
                     </div>
                 </nav>
@@ -416,7 +444,6 @@ const AttendanceDashboard = () => {
                     <DialogHeader>
                         <DialogTitle>Delete Attendance Record?</DialogTitle>
                     </DialogHeader>
-                    {/* <AttendanceForm isEdit /> */}
                     <div className="flex justify-between mt-4 gap-4">
                         <Button onClick={handleConfirmDelete} className='flex-1'>Delete Record</Button>
                         <Button
