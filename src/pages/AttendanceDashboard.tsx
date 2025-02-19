@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, LayoutDashboard, List, Menu, Trash2, Edit2, Sun, Moon, LogOut, Home, Ban } from 'lucide-react';
+import { Calendar as CalendarIcon, LayoutDashboard, List, Trash2, Edit2, Sun, Moon, LogOut, Home, Ban, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Toggle } from "@/components/ui/toggle"
@@ -250,26 +250,26 @@ const AttendanceDashboard = () => {
     return (
         <div className={`flex h-screen`}>
             {/* Sidebar */}
-            <div className={`${theme === 'dark' ? 'bg-black text-gray-200' : 'bg-white'} shadow-lg ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out h-full flex flex-col`}>
-                <div className={`p-4 flex justify-between items-center ${!isSidebarOpen && 'justify-center ml-1'}`}>
+            <div className={`${theme === 'dark' ? 'bg-black text-gray-200' : 'bg-white'} shadow-lg ${isSidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 ease-in-out h-full flex flex-col`}>
+                <div className={`flex items-center ${isSidebarOpen ? "p-4 justify-between" : 'justify-center py-4'}`}>
                     <button
                         className={`font-bold text-xl ${!isSidebarOpen && 'hidden'}`}
                         onClick={() => {
                             navigate('/')
                         }}
                     >Attendance</button>
-                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-                        <Menu className="h-6 w-6 " />
+                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!isSidebarOpen)} className='p-6'>
+                        {isSidebarOpen ? <ChevronsLeft /> : <ChevronsRight />}
                     </Button>
                 </div>
-                <hr className=' mx-4' />
+                <hr className={`${isSidebarOpen ? 'mx-4' : 'mx-2'}`} />
 
                 <nav className="flex-1 flex flex-col justify-between">
-                    <div className='mt-8 px-4 space-y-2'>
+                    <div className={`space-y-2 mt-8 ${isSidebarOpen ? 'px-4' : "px-2"}`}>
 
                         <button
                             onClick={() => setActiveView('dashboard')}
-                            className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
+                            className={`${isSidebarOpen ? "w-full" : "w-fit"}  flex items-center space-x-3 p-4 transition-colors rounded-lg 
                             ${activeView === 'dashboard'
                                     ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-200')
                                     : ''} 
@@ -281,7 +281,7 @@ const AttendanceDashboard = () => {
 
                         <button
                             onClick={() => setActiveView('details')}
-                            className={`w-full p-4 flex items-center space-x-3 transition-colors rounded-lg 
+                            className={`${isSidebarOpen ? "w-full" : "w-fit"} flex items-center space-x-3 p-4 transition-colors rounded-lg 
                             ${activeView === 'details'
                                     ? (theme === 'dark' ? 'bg-[#1A1A1A]' : 'bg-gray-200')
                                     : ''} 
@@ -295,7 +295,7 @@ const AttendanceDashboard = () => {
                     {/* User Details */}
                     <div className='shadow-t-md dark:shadow-[#222222] dark:bg-black rounded-t-2xl'>
                         <div className=' flex flex-col gap-2'>
-                            <div className='flex items-center justify-center gap-4 rounded-lg mx-2 mt-2 p-2 bg-gray-200 dark:bg-[#1a1a1a]'>
+                            <div className={`flex items-center justify-center ${isSidebarOpen && "gap-4"} rounded-lg mx-2 mt-2 p-2 bg-gray-200 dark:bg-[#1a1a1a]`}>
                                 <div>
                                     <UserButton />
                                 </div>
@@ -309,8 +309,11 @@ const AttendanceDashboard = () => {
 
                                 </div>
                             </div>
-                            <div className='grid grid-cols-2 gap-2 justify-between items-center mx-2 mb-4'>
-                                <Button className={`${!isSidebarOpen && 'p-2 w-full'}`} variant={'outline'} onClick={() => { navigate("/") }}>
+                            <div className={`${isSidebarOpen ? "grid grid-cols-2 gap-2 mx-2" : "flex justify-center"} mb-4`}>
+                                <Button
+                                    // className={`${!isSidebarOpen && 'p-2 w-full'}`}
+                                    className=''
+                                    variant={'outline'} onClick={() => { navigate("/") }}>
                                     <Home />
                                     {isSidebarOpen && <span>Home</span>}
                                 </Button>
