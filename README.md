@@ -1,50 +1,100 @@
-# React + TypeScript + Vite
+<div align="center">
+  <h1>🎯 Attendance Tracker</h1>
+  <p>A modern, full-featured attendance tracking web application built with React, TypeScript, and Vite. The system provides secure authentication, real-time analytics, and a clean, responsive UI for managing class attendance efficiently.</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+  <p>
+    <a href="https://tracker.pegioncloud.com">View Demo</a>
+    ·
+    <a href="https://github.com/md-saqib06/internhunt/issues">Report Bug</a>
+    ·
+    <a href="https://deepwiki.com/md-saqib06/attendance-tracker">Documentation</a>
+  </p>
+</div>
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌟 Features
 
-## Expanding the ESLint configuration
+- 🔐 Authentication via Clerk (with social login)
+- 📊 Real-time attendance statistics using Recharts
+- 🧾 Track and manage attendance records
+- 📆 Calendar view and date-picker integration
+- 🌙 Light/Dark theme toggle
+- 📱 Responsive, modern UI using TailwindCSS + Radix UI
+- 🔧 Built with Vite for fast dev experience
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+---
 
-- Configure the top-level `parserOptions` property like this:
+## 🛠 Tech Stack
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+| Layer        | Technology                        |
+|-------------|-----------------------------------|
+| Frontend     | React, TypeScript, Vite          |
+| UI/UX        | TailwindCSS, Radix UI, Lucide Icons |
+| Charts       | Recharts                         |
+| Auth         | Clerk                            |
+| Routing      | React Router DOM                 |
+| Date Utils   | date-fns, react-day-picker       |
+
+---
+
+## 📂 Project Structure
+
+```
+├── public/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── App.tsx
+│   └── main.tsx
+├── index.html
+├── package.json
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+---
 
+## 🚀 Setup Instructions
+
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/md-saqib06/attendance-tracker.git
+cd attendance-tracker
+```
+
+### 2. Install dependencies
 ```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+bun install
+```
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+### 3. Add environment variables
+```bash
+touch .env
+```
+
+### Fill in the Clerk publishable key
+```env
+CLERK_PUBLISHABLE_KEY=your_key_here
+```
+
+### 4. Start the dev server
+```js
+bun dev
+```
+
+---
+
+## 📘 Documentation
+
+For complete architecture, flow diagrams, and component breakdowns, check the full documentation on DeepWiki:
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/md-saqib06/attendance-tracker)
+
+---
+
+## 📄 License
+
+MIT License © [md-saqib06](https://github.com/md-saqib06)
+
 ```
